@@ -1,0 +1,85 @@
+
+---
+
+## `.gitignore`
+
+```gitignore
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual env
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Python tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+coverage/
+htmlcov/
+.coverage
+.coverage.*
+
+# Build
+build/
+dist/
+*.egg-info/
+
+# Local data
+data/audio/generated/
+data/audio/cache/
+data/audio/input/
+data/memory/sessions/
+data/vision/ocr_cache/
+data/vision/screenshots/
+
+# Sensitive / machine-local
+data/vtube_token.txt
+
+# Voice reference and private media
+data/voice/reference/
+*.wav
+*.mp3
+*.flac
+*.ogg
+
+# If you want to keep only generated media ignored, use this instead:
+# data/audio/generated/
+# and remove the global audio extensions above
+
+# Local knowledge base / private docs
+data/knowledge/imported/
+data/knowledge/notes/
+data/knowledge/references/
+data/knowledge/books/
+
+# Model assets / tools
+tools/
+models/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Notebook
+.ipynb_checkpoints/

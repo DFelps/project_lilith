@@ -1,0 +1,4 @@
+app_name: Lilith
+language: pt-BR
+debug: true
+mode: local_only

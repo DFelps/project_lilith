@@ -1,0 +1,7 @@
+stt:
+  enabled: false
+  engine: whisper.cpp
+
+tts:
+  enabled: true
+  engine: piper

@@ -1,0 +1,5 @@
+local_only: true
+allow_remote_access: false
+store_raw_audio: false
+store_screenshots: true
+auto_delete_screenshots: false

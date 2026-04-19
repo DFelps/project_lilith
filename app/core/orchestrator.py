@@ -1,0 +1,297 @@
+from queue import Queue
+from threading import Thread, Event, Lock
+import time
+import asyncio
+
+from app.brain.memory_manager import MemoryManager
+from app.brain.persona_loader import PersonaLoader
+from app.brain.style_guard import StyleGuard
+from app.brain.behavior import is_repeated_question, is_aggressive
+from app.core.response_builder import ResponseBuilder
+from app.core.router import Router
+from app.core.safety import Safety
+from app.core.session_manager import SessionManager
+from app.llm.general_reasoner import GeneralReasoner
+from app.memory.retrieval import Retrieval
+from app.ui.cli import CLI
+from app.ui.vtube_state import set_vtube_state
+from app.utils.logger import log
+from app.voice.tts import generate_audio
+from app.voice.vtube_lipsync import play_with_lipsync
+
+
+class LilithOrchestrator:
+    def __init__(self, config: dict) -> None:
+        self.config = config
+        self.persona = PersonaLoader().load()
+        model_name = config.get("models", {}).get("general", {}).get("name", "llama3.1:8b")
+        self.reasoner = GeneralReasoner(persona=self.persona, model=model_name)
+        self.router = Router()
+        self.retrieval = Retrieval()
+        self.memory = MemoryManager()
+        self.style_guard = StyleGuard()
+        self.response_builder = ResponseBuilder()
+        self.safety = Safety()
+        self.session = SessionManager()
+        self.cli = CLI()
+
+        self.voice_enabled = config.get("voice", {}).get("tts", {}).get("enabled", False)
+
+        self.voice_text_queue: Queue[str | None] = Queue()
+        self.voice_audio_queue: Queue[tuple[str, object] | None] = Queue()
+
+        self.voice_state_lock = Lock()
+        self.pending_voice_items = 0
+        self.voice_active = Event()
+
+        self.voice_generate_thread = Thread(target=self._voice_generate_worker, daemon=True)
+        self.voice_play_thread = Thread(target=self._voice_play_worker, daemon=True)
+
+        self.voice_generate_thread.start()
+        self.voice_play_thread.start()
+
+    def _mark_voice_item_added(self) -> None:
+        with self.voice_state_lock:
+            self.pending_voice_items += 1
+            self.voice_active.set()
+
+    def _mark_voice_item_finished(self) -> None:
+        with self.voice_state_lock:
+            if self.pending_voice_items > 0:
+                self.pending_voice_items -= 1
+
+            if self.pending_voice_items == 0:
+                self.voice_active.clear()
+
+    def _set_state_safe(self, state: str) -> None:
+        try:
+            set_vtube_state(state)
+        except Exception as exc:
+            log(f"Falha ao ativar estado '{state}': {exc}")
+
+    def _voice_generate_worker(self) -> None:
+        while True:
+            sentence = self.voice_text_queue.get()
+
+            if sentence is None:
+                self.voice_audio_queue.put(None)
+                self.voice_text_queue.task_done()
+                break
+
+            try:
+                result = generate_audio(sentence)
+                if result is not None:
+                    self.voice_audio_queue.put(result)
+                else:
+                    self._mark_voice_item_finished()
+            except Exception as exc:
+                log(f"Falha ao gerar TTS: {exc}")
+                self._mark_voice_item_finished()
+            finally:
+                self.voice_text_queue.task_done()
+
+    def _voice_play_worker(self) -> None:
+        while True:
+            item = self.voice_audio_queue.get()
+
+            if item is None:
+                self.voice_audio_queue.task_done()
+                break
+
+            try:
+                _, wav = item
+                asyncio.run(play_with_lipsync(wav, 24000))
+            except Exception as exc:
+                log(f"Falha ao reproduzir áudio com lipsync: {exc}")
+            finally:
+                self._mark_voice_item_finished()
+                self.voice_audio_queue.task_done()
+
+    def _enqueue_voice(self, sentences: list[str]) -> None:
+        if not self.voice_enabled:
+            return
+
+        for sentence in sentences:
+            cleaned = sentence.strip()
+            if cleaned:
+                self._mark_voice_item_added()
+                self.voice_text_queue.put(cleaned)
+
+    def _wait_until_voice_finishes(self) -> None:
+        if not self.voice_enabled:
+            return
+
+        showed_status = False
+
+        while self.voice_active.is_set():
+            if not showed_status:
+                print("Lilith falando...", end="\r", flush=True)
+                showed_status = True
+            time.sleep(0.15)
+
+        if showed_status:
+            print(" " * 40, end="\r", flush=True)
+
+        self._set_state_safe("idle")
+
+    def _extract_sentences(self, buffer: str) -> tuple[list[str], str]:
+        sentences = []
+        current = []
+        i = 0
+        closers = '"\')]} '
+        min_sentence_length = 35
+
+        while i < len(buffer):
+            ch = buffer[i]
+            current.append(ch)
+
+            if ch in ".!?":
+                j = i + 1
+                while j < len(buffer) and buffer[j] in closers:
+                    current.append(buffer[j])
+                    j += 1
+
+                sentence = "".join(current).strip()
+
+                if sentence and len(sentence) >= min_sentence_length:
+                    sentences.append(sentence)
+                    current = []
+
+                i = j
+                continue
+
+            i += 1
+
+        remainder = "".join(current)
+        return sentences, remainder
+
+    def _prepare_input(self, user_text: str) -> tuple[dict | None, str | None, str | None]:
+        safety_message = self.safety.validate(user_text)
+        if safety_message:
+            payload = self.response_builder.build(safety_message)
+            self.memory.remember_exchange(user_text, payload["text"])
+            return payload, None, None
+
+        route = self.router.classify(user_text)
+        context = self.retrieval.build_context()
+
+        history = self.memory.get_last_user_messages()
+        repeated = is_repeated_question(user_text, history)
+        aggressive = is_aggressive(user_text)
+
+        modified_input = user_text
+
+        if repeated:
+            modified_input = (
+                "O usuário repetiu a mesma pergunta. "
+                "Responda de forma diferente ou mais curta.\n\n"
+                + modified_input
+            )
+
+        if aggressive:
+            modified_input = (
+                "O usuário está sendo agressivo. "
+                "Responda de forma calma, curta e levemente fria, sem confrontar.\n\n"
+                + modified_input
+            )
+
+        if route == "light_technical":
+            modified_input = (
+                "Responda de forma leve e geral, sem aprofundar em detalhes técnicos. "
+                + modified_input
+            )
+
+        return None, modified_input, context
+
+    def process_text(self, user_text: str) -> dict:
+        immediate_payload, modified_input, context = self._prepare_input(user_text)
+        if immediate_payload is not None:
+            return immediate_payload
+
+        raw_answer = self.reasoner.answer(user_text=modified_input, context=context)
+
+        last_answer = self.memory.get_last_answer()
+        if last_answer and raw_answer.strip() == last_answer.strip():
+            raw_answer = "Já respondi isso de outra forma."
+
+        safe_answer = self.style_guard.enforce(raw_answer)
+        payload = self.response_builder.build(safe_answer)
+
+        self.memory.remember_exchange(user_text, payload["text"])
+
+        return payload
+
+    def run_cli(self) -> None:
+        log("Lilith iniciada.")
+        self.cli.print_banner(self.persona.get("name", "Lilith"))
+        self._set_state_safe("idle")
+
+        while True:
+            self._wait_until_voice_finishes()
+
+            user_text = self.cli.read_input()
+
+            if user_text.lower() in {"sair", "exit", "quit"}:
+                log("Encerrando Lilith.")
+                self.voice_text_queue.put(None)
+                self.voice_text_queue.join()
+                self.voice_audio_queue.join()
+                self._set_state_safe("idle")
+                break
+
+            immediate_payload, modified_input, context = self._prepare_input(user_text)
+
+            if immediate_payload is not None:
+                self.cli.show_response(immediate_payload["text"])
+                self._enqueue_voice(immediate_payload["sentences"])
+                continue
+
+            self._set_state_safe("thinking")
+
+            print("Lilith: ", end="", flush=True)
+
+            chunks = []
+            sentence_buffer = ""
+
+            try:
+                for chunk in self.reasoner.stream_answer(user_text=modified_input, context=context):
+                    if not chunk:
+                        continue
+
+                    print(chunk, end="", flush=True)
+                    chunks.append(chunk)
+                    sentence_buffer += chunk
+
+                    ready_sentences, sentence_buffer = self._extract_sentences(sentence_buffer)
+                    self._enqueue_voice(ready_sentences)
+
+                if sentence_buffer.strip():
+                    self._enqueue_voice([sentence_buffer.strip()])
+
+                print()
+
+                raw_answer = "".join(chunks).strip()
+                if not raw_answer:
+                    raw_answer = "Não consegui responder agora."
+
+                last_answer = self.memory.get_last_answer()
+                if last_answer and raw_answer.strip() == last_answer.strip():
+                    raw_answer = "Já respondi isso de outra forma."
+
+                safe_answer = self.style_guard.enforce(raw_answer)
+                payload = self.response_builder.build(safe_answer)
+
+                self.memory.remember_exchange(user_text, payload["text"])
+
+                if not self.voice_enabled:
+                    self._set_state_safe("idle")
+
+            except Exception as exc:
+                print()
+                log(f"Falha no streaming do LLM: {exc}")
+                payload = self.process_text(user_text)
+                self.cli.show_response(payload["text"])
+                self._enqueue_voice(payload["sentences"])
+
+                if not self.voice_enabled:
+                    self._set_state_safe("idle")

@@ -1,0 +1,4 @@
+enabled: false
+capture_mode: manual
+ocr_enabled: false
+cleanup_after_analysis: true
