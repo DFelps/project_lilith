@@ -1,64 +1,69 @@
 # Lilith
 
-Lilith é uma assistente local com voz, personalidade, memória, TTS e avatar Live2D integrado ao VTube Studio.
+Lilith is a local AI assistant with voice, personality, memory, TTS and a Live2D avatar integrated with VTube Studio.
 
-O projeto começou como uma IA conversacional local e evoluiu para um MVP de "presença virtual":
-- conversa por texto
-- responde com voz
-- mexe a boca via parâmetro customizado no VTube Studio
-- pode alternar estados como `thinking`, `speaking` e `idle`
-- usa modelo local via Ollama
-- mantém memória e estilo de resposta
+The project started as a local conversational AI and evolved into a "virtual presence" MVP:
+
+- text-based conversation
+- voice responses (TTS)
+- lip sync via custom parameter in VTube Studio
+- dynamic states like `thinking`, `speaking` and `idle`
+- local LLM powered by Ollama
+- memory and response style control
+
+---
 
 ## Status
 
-Projeto em desenvolvimento ativo.
+Active development.
 
-Atualmente o MVP já faz:
-- chat por CLI
-- geração de resposta com LLM local
-- TTS local
-- lipsync via VTube Studio API
-- hotkeys/estados no avatar
-- fila de voz com geração e reprodução assíncronas
+Current MVP includes:
 
-Próximos passos:
-- captura de microfone e áudio do sistema
-- decisão contextual de quando interagir
-- comportamento mais social em call
-- polimento de naturalidade, timing e expressividade
+- CLI-based chat
+- local LLM response generation
+- local TTS pipeline
+- lip sync integration with VTube Studio API
+- avatar state control via hotkeys
+- async voice queue (generation + playback)
+
+### Next steps
+
+- microphone and system audio capture
+- contextual decision-making (when to speak)
+- more social behavior in voice calls
+- improved natural timing and expressiveness
 
 ---
 
 ## Stack
 
-### IA e raciocínio
+### AI & Reasoning
 - Python
 - Ollama
-- modelo local de linguagem
+- Local language model
 
-### Voz
+### Voice
 - Coqui XTTS v2
-- `sounddevice`
-- `soundfile`
+- sounddevice
+- soundfile
 
 ### Avatar
 - VTube Studio
 - Live2D
-- WebSocket API do VTube Studio
+- VTube Studio WebSocket API
 
-### Estrutura interna
-- memória
-- persona
-- roteamento de intenção
-- segurança básica
-- builder de resposta
-- fila de TTS
-- lipsync customizado
+### Internal Architecture
+- memory system
+- persona handling
+- intent routing
+- basic safety layer
+- response builder
+- TTS queue
+- custom lip sync system
 
 ---
 
-## Estrutura do projeto
+## Project Structure
 
 ```text
 project_lilith/
@@ -88,3 +93,18 @@ project_lilith/
 ├── tests/
 ├── .venv/
 └── main.py
+```
+
+---
+
+## Description
+
+```txt
+Local AI assistant with voice, memory and a Live2D avatar, designed for real-time interaction and virtual presence.
+```
+
+---
+
+## Author
+
+Daniel Siqueira
