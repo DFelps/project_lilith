@@ -125,7 +125,7 @@ class VTubeStudioClient:
     async def set_state(self, state: str) -> None:
         mapping = {
             "idle": "My Animation 1",
-            "thinking": "thinking_1",
+            # "thinking": "thinking_1",
             "speaking": "My Animation 2",
         }
 

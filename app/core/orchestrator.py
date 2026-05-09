@@ -16,7 +16,7 @@ from app.memory.retrieval import Retrieval
 from app.ui.cli import CLI
 from app.ui.vtube_state import set_vtube_state
 from app.utils.logger import log
-from app.voice.tts import generate_audio
+from app.voice.tts import generate_audio, warmup_tts
 from app.voice.vtube_lipsync import play_with_lipsync
 
 
@@ -50,6 +50,15 @@ class LilithOrchestrator:
         self.voice_generate_thread.start()
         self.voice_play_thread.start()
 
+        if self.voice_enabled:
+            Thread(target=self._warmup_voice, daemon=True).start()
+
+    def _warmup_voice(self) -> None:
+        try:
+            warmup_tts()
+        except Exception as exc:
+            log(f"Falha no warmup TTS: {exc}")
+
     def _mark_voice_item_added(self) -> None:
         with self.voice_state_lock:
             self.pending_voice_items += 1
@@ -71,15 +80,15 @@ class LilithOrchestrator:
 
     def _voice_generate_worker(self) -> None:
         while True:
-            sentence = self.voice_text_queue.get()
+            text = self.voice_text_queue.get()
 
-            if sentence is None:
+            if text is None:
                 self.voice_audio_queue.put(None)
                 self.voice_text_queue.task_done()
                 break
 
             try:
-                result = generate_audio(sentence)
+                result = generate_audio(text)
                 if result is not None:
                     self.voice_audio_queue.put(result)
                 else:
@@ -107,15 +116,16 @@ class LilithOrchestrator:
                 self._mark_voice_item_finished()
                 self.voice_audio_queue.task_done()
 
-    def _enqueue_voice(self, sentences: list[str]) -> None:
+    def _enqueue_voice(self, text: str) -> None:
         if not self.voice_enabled:
             return
 
-        for sentence in sentences:
-            cleaned = sentence.strip()
-            if cleaned:
-                self._mark_voice_item_added()
-                self.voice_text_queue.put(cleaned)
+        cleaned = text.strip()
+        if not cleaned:
+            return
+
+        self._mark_voice_item_added()
+        self.voice_text_queue.put(cleaned)
 
     def _wait_until_voice_finishes(self) -> None:
         if not self.voice_enabled:
@@ -133,37 +143,6 @@ class LilithOrchestrator:
             print(" " * 40, end="\r", flush=True)
 
         self._set_state_safe("idle")
-
-    def _extract_sentences(self, buffer: str) -> tuple[list[str], str]:
-        sentences = []
-        current = []
-        i = 0
-        closers = '"\')]} '
-        min_sentence_length = 35
-
-        while i < len(buffer):
-            ch = buffer[i]
-            current.append(ch)
-
-            if ch in ".!?":
-                j = i + 1
-                while j < len(buffer) and buffer[j] in closers:
-                    current.append(buffer[j])
-                    j += 1
-
-                sentence = "".join(current).strip()
-
-                if sentence and len(sentence) >= min_sentence_length:
-                    sentences.append(sentence)
-                    current = []
-
-                i = j
-                continue
-
-            i += 1
-
-        remainder = "".join(current)
-        return sentences, remainder
 
     def _prepare_input(self, user_text: str) -> tuple[dict | None, str | None, str | None]:
         safety_message = self.safety.validate(user_text)
@@ -243,15 +222,12 @@ class LilithOrchestrator:
 
             if immediate_payload is not None:
                 self.cli.show_response(immediate_payload["text"])
-                self._enqueue_voice(immediate_payload["sentences"])
+                self._enqueue_voice(immediate_payload["text"])
                 continue
-
-            self._set_state_safe("thinking")
 
             print("Lilith: ", end="", flush=True)
 
             chunks = []
-            sentence_buffer = ""
 
             try:
                 for chunk in self.reasoner.stream_answer(user_text=modified_input, context=context):
@@ -260,13 +236,6 @@ class LilithOrchestrator:
 
                     print(chunk, end="", flush=True)
                     chunks.append(chunk)
-                    sentence_buffer += chunk
-
-                    ready_sentences, sentence_buffer = self._extract_sentences(sentence_buffer)
-                    self._enqueue_voice(ready_sentences)
-
-                if sentence_buffer.strip():
-                    self._enqueue_voice([sentence_buffer.strip()])
 
                 print()
 
@@ -282,6 +251,7 @@ class LilithOrchestrator:
                 payload = self.response_builder.build(safe_answer)
 
                 self.memory.remember_exchange(user_text, payload["text"])
+                self._enqueue_voice(payload["text"][:160])
 
                 if not self.voice_enabled:
                     self._set_state_safe("idle")
@@ -291,7 +261,7 @@ class LilithOrchestrator:
                 log(f"Falha no streaming do LLM: {exc}")
                 payload = self.process_text(user_text)
                 self.cli.show_response(payload["text"])
-                self._enqueue_voice(payload["sentences"])
+                self._enqueue_voice(payload["text"][:160])
 
                 if not self.voice_enabled:
                     self._set_state_safe("idle")
