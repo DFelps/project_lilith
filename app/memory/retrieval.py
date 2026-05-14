@@ -12,6 +12,6 @@ class Retrieval:
         history = self.conversations.read()[-5:]
         profile_text = f"Preferências do usuário: {profile}"
         history_text = "\n".join(
-            f"Usuário: {item['user']}\nLilith: {item['assistant']}" for item in history
+            f"Usuário: {item['user']}\nLyra: {item['assistant']}" for item in history
         )
         return f"{profile_text}\n\nHistórico recente:\n{history_text}".strip()

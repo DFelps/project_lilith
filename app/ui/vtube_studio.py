@@ -9,11 +9,11 @@ class VTubeStudioClient:
     def __init__(self, host: str = "127.0.0.1", port: int = 8001) -> None:
         self.url = f"ws://{host}:{port}"
         self.ws = None
-        self.plugin_name = "Lilith"
+        self.plugin_name = "Lyra"
         self.plugin_developer = "Daniel"
         self.token_path = Path("data/vtube_token.txt")
         self.authentication_token = None
-        self.mouth_parameter_id = "LilithMouthOpen"
+        self.mouth_parameter_id = "LyraMouthOpen"
 
     async def connect(self) -> None:
         self.ws = await websockets.connect(self.url)
@@ -77,7 +77,7 @@ class VTubeStudioClient:
             "ParameterCreationRequest",
             {
                 "parameterName": self.mouth_parameter_id,
-                "explanation": "Custom mouth open parameter for Lilith lip sync",
+                "explanation": "Custom mouth open parameter for Lyra lip sync",
                 "min": 0.0,
                 "max": 1.0,
                 "defaultValue": 0.0,
@@ -125,7 +125,7 @@ class VTubeStudioClient:
     async def set_state(self, state: str) -> None:
         mapping = {
             "idle": "My Animation 1",
-            # "thinking": "thinking_1",
+            "thinking": "thinking_1",
             "speaking": "My Animation 2",
         }
 

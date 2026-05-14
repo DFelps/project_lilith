@@ -16,12 +16,12 @@ import torch
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = BASE_DIR / "data" / "audio" / "generated"
-REFERENCE_WAV = BASE_DIR / "data" / "voice" / "reference" / "lilith_reference.wav"
-REFERENCE_TEXT = BASE_DIR / "data" / "voice" / "reference" / "lilith_reference.txt"
+REFERENCE_WAV = BASE_DIR / "data" / "voice" / "reference" / "lyra_reference.wav"
+REFERENCE_TEXT = BASE_DIR / "data" / "voice" / "reference" / "lyra_reference.txt"
 
 SAMPLE_RATE = 24000
 MAX_TEXT_CHARS = 1000
-WARMUP_TEXT = "Lilith pronta"
+WARMUP_TEXT = "Lyra pronta"
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -35,13 +35,13 @@ F5_PTBR_CKPT = F5_PTBR_DIR / "model_last.safetensors"
 F5_PTBR_VOCAB = F5_PTBR_DIR / "vocab.txt"
 
 F5_CONFIG = {
-    "model": os.getenv("LILITH_F5_MODEL", "F5TTS_v1_Base"),
-    "ckpt_file": os.getenv("LILITH_F5_CKPT", str(F5_PTBR_CKPT)),
-    "vocab_file": os.getenv("LILITH_F5_VOCAB", str(F5_PTBR_VOCAB)),
-    "speed": float(os.getenv("LILITH_F5_SPEED", "0.72")),
-    "nfe_step": int(os.getenv("LILITH_F5_NFE_STEP", "32")),
-    "cfg_strength": float(os.getenv("LILITH_F5_CFG_STRENGTH", "1.2")),
-    "sway_sampling_coef": float(os.getenv("LILITH_F5_SWAY", "-1")),
+    "model": os.getenv("LYRA_F5_MODEL", "F5TTS_v1_Base"),
+    "ckpt_file": os.getenv("LYRA_F5_CKPT", str(F5_PTBR_CKPT)),
+    "vocab_file": os.getenv("LYRA_F5_VOCAB", str(F5_PTBR_VOCAB)),
+    "speed": float(os.getenv("LYRA_F5_SPEED", "0.72")),
+    "nfe_step": int(os.getenv("LYRA_F5_NFE_STEP", "32")),
+    "cfg_strength": float(os.getenv("LYRA_F5_CFG_STRENGTH", "1.2")),
+    "sway_sampling_coef": float(os.getenv("LYRA_F5_SWAY", "-1")),
 }
 
 
@@ -163,7 +163,7 @@ def generate_audio(text: str) -> tuple[str, np.ndarray] | None:
     print(f"[F5-TTS] referência: {REFERENCE_WAV.name} ({REFERENCE_WAV.stat().st_size / 1024:.0f} KB)")
 
     if not reference_text:
-        print("[F5-TTS] aviso: lilith_reference.txt não encontrado, F5 pode usar ASR e ficar mais lento")
+        print("[F5-TTS] aviso: lyra_reference.txt não encontrado, F5 pode usar ASR e ficar mais lento")
 
     if device == "cuda":
         print(f"[F5-TTS] VRAM antes: {torch.cuda.memory_allocated(0) / 1024**2:.0f} MB")

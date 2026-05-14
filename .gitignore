@@ -1,9 +1,3 @@
-
----
-
-## `.gitignore`
-
-```gitignore
 # Python
 __pycache__/
 *.py[cod]
@@ -44,7 +38,7 @@ build/
 dist/
 *.egg-info/
 
-# Local data
+# Local generated data
 data/audio/generated/
 data/audio/cache/
 data/audio/input/
@@ -52,19 +46,15 @@ data/memory/sessions/
 data/vision/ocr_cache/
 data/vision/screenshots/
 
-# Sensitive / machine-local
+# VTube Studio local auth
 data/vtube_token.txt
 
-# Voice reference and private media
-data/voice/reference/
-*.wav
-*.mp3
-*.flac
-*.ogg
-
-# If you want to keep only generated media ignored, use this instead:
-# data/audio/generated/
-# and remove the global audio extensions above
+# Private voice references and local models
+data/voice/reference/*.wav
+data/voice/reference/*.mp3
+data/voice/reference/*.flac
+data/voice/reference/*.ogg
+data/models/
 
 # Local knowledge base / private docs
 data/knowledge/imported/
@@ -72,7 +62,7 @@ data/knowledge/notes/
 data/knowledge/references/
 data/knowledge/books/
 
-# Model assets / tools
+# External tools / model assets
 tools/
 models/
 

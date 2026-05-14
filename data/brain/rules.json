@@ -4,9 +4,10 @@
   "allow_audio_only_with_push_to_talk": true,
   "technical_depth": "medium",
   "auto_execute_actions": false,
-  "streamer_mode": true,
+  "social_mode": true,
   "allow_playful_sarcasm": true,
-  "allow_theatrical_arrogance": true,
+  "allow_strong_personality": true,
+  "allow_controlled_hostility": true,
   "avoid_real_insults": true,
   "tts_friendly_output": true
 }
