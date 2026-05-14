@@ -20,7 +20,7 @@ from app.voice.tts import configure_tts, generate_audio, warmup_tts
 from app.voice.vtube_lipsync import play_with_lipsync
 
 
-class LilithOrchestrator:
+class LyraOrchestrator:
     def __init__(self, config: dict) -> None:
         self.config = config
         self.persona = PersonaLoader().load()
@@ -136,7 +136,7 @@ class LilithOrchestrator:
 
         while self.voice_active.is_set():
             if not showed_status:
-                print("Lilith falando...", end="\r", flush=True)
+                print("Lyra falando...", end="\r", flush=True)
                 showed_status = True
             time.sleep(0.15)
 
@@ -202,8 +202,8 @@ class LilithOrchestrator:
         return payload
 
     def run_cli(self) -> None:
-        log("Lilith iniciada.")
-        self.cli.print_banner(self.persona.get("name", "Lilith"))
+        log("Lyra iniciada.")
+        self.cli.print_banner(self.persona.get("name", "Lyra"))
         self._set_state_safe("idle")
 
         while True:
@@ -212,7 +212,7 @@ class LilithOrchestrator:
             user_text = self.cli.read_input()
 
             if user_text.lower() in {"sair", "exit", "quit"}:
-                log("Encerrando Lilith.")
+                log("Encerrando Lyra.")
                 self.voice_text_queue.put(None)
                 self.voice_text_queue.join()
                 self.voice_audio_queue.join()
@@ -226,7 +226,7 @@ class LilithOrchestrator:
                 self._enqueue_voice(immediate_payload["text"])
                 continue
 
-            print("Lilith: ", end="", flush=True)
+            print("Lyra: ", end="", flush=True)
 
             chunks = []
 
@@ -266,3 +266,4 @@ class LilithOrchestrator:
 
                 if not self.voice_enabled:
                     self._set_state_safe("idle")
+

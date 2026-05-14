@@ -5,5 +5,5 @@ class CLI:
     def read_input(self) -> str:
         return input("Você: ").strip()
 
-    def show_response(self, text: str) -> None:
-        print(f"Lilith: {text}\n")
+    def show_response(self, text: str, name: str = "Lyra") -> None:
+        print(f"{name}: {text}\n")

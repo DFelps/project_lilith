@@ -1,72 +1,76 @@
-# Lilith
+# Lyra
 
-Lilith is a local AI assistant with voice, personality, memory, TTS and a Live2D avatar integrated with VTube Studio.
+Lyra é uma IA local com personalidade, memória, voz por F5-TTS e integração visual opcional com avatar/VTuber.
 
-The project started as a local conversational AI and evolved into a "virtual presence" MVP:
+O projeto começou como uma assistente local e agora está sendo reestruturado como uma presença social para desktop/call:
 
-- text-based conversation
-- voice responses (TTS)
-- lip sync via custom parameter in VTube Studio
-- dynamic states like `thinking`, `speaking` and `idle`
-- local LLM powered by Ollama
-- memory and response style control
-
----
+- conversa por CLI
+- respostas com LLM local via Ollama
+- voz local com F5-TTS
+- fila assíncrona de geração/reprodução de áudio
+- lipsync por áudio gerado
+- estados visuais como `idle`, `thinking` e `speaking`
+- memória simples e controle de estilo
 
 ## Status
 
-Active development.
+Projeto experimental em desenvolvimento ativo.
 
-Current MVP includes:
+MVP atual:
 
-- CLI-based chat
-- local LLM response generation
-- local TTS pipeline
-- lip sync integration with VTube Studio API
-- avatar state control via hotkeys
-- async voice queue (generation + playback)
+- chat por terminal
+- persona carregada de JSON
+- geração de resposta via Ollama
+- TTS com F5-TTS
+- normalização de texto para voz
+- controle de avatar via VTube Studio API, quando disponível
+- fallback de áudio normal quando o VTube Studio não está aberto
 
-### Next steps
+Próximas fases:
 
-- microphone and system audio capture
-- contextual decision-making (when to speak)
-- more social behavior in voice calls
-- improved natural timing and expressiveness
-
----
+- avatar próprio direto na área de trabalho, sem depender do VTube Studio
+- mouth sprites `closed`, `half`, `open`
+- estado visual `thinking` direto no overlay
+- captura de microfone e áudio do sistema
+- decisão contextual de quando interagir sozinha
+- respostas rápidas em cache para wake word e reações curtas
 
 ## Stack
 
-### AI & Reasoning
+### IA
+
 - Python
 - Ollama
-- Local language model
+- modelo local, por padrão `llama3.1:8b`
 
-### Voice
-- Coqui XTTS v2
+### Voz
+
+- F5-TTS
 - sounddevice
 - soundfile
+- numpy
+- torch
 
-### Avatar
-- VTube Studio
-- Live2D
-- VTube Studio WebSocket API
+### Visual atual
 
-### Internal Architecture
-- memory system
-- persona handling
-- intent routing
-- basic safety layer
-- response builder
-- TTS queue
-- custom lip sync system
+- VTube Studio opcional
+- Live2D opcional
+- WebSocket API do VTube Studio
 
----
+### Estrutura interna
 
-## Project Structure
+- core orchestrator
+- persona e estilo
+- memória local
+- roteamento básico
+- safety local simples
+- fila de TTS
+- lipsync baseado no volume do áudio gerado
+
+## Estrutura
 
 ```text
-project_lilith/
+project_lyra/
 ├── app/
 │   ├── brain/
 │   ├── core/
@@ -79,32 +83,131 @@ project_lilith/
 ├── config/
 ├── data/
 │   ├── audio/
-│   │   ├── cache/
-│   │   ├── generated/
-│   │   └── input/
 │   ├── brain/
 │   ├── knowledge/
 │   ├── memory/
-│   │   └── sessions/
+│   ├── models/
 │   ├── vision/
 │   └── voice/
 │       └── reference/
 ├── scripts/
 ├── tests/
-├── .venv/
-└── main.py
+├── main.py
+└── requirements.txt
 ```
 
----
+## Instalação
 
-## Description
-
-```txt
-Local AI assistant with voice, memory and a Live2D avatar, designed for real-time interaction and virtual presence.
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
----
+## Ollama
 
-## Author
+Deixe o Ollama rodando localmente:
 
-Daniel Siqueira
+```text
+http://127.0.0.1:11434
+```
+
+Modelo padrão:
+
+```bash
+ollama run llama3.1:8b
+```
+
+## F5-TTS
+
+Arquivos esperados:
+
+```text
+data/voice/reference/lyra_reference.wav
+data/voice/reference/lyra_reference.txt
+```
+
+Modelo PT-BR local esperado por padrão:
+
+```text
+data/models/f5_ptbr/model_last.safetensors
+data/models/f5_ptbr/vocab.txt
+```
+
+Esses arquivos são locais e não devem ser versionados se forem pesados ou privados.
+
+Variáveis opcionais:
+
+```text
+LYRA_F5_SPEED=0.72
+LYRA_F5_NFE_STEP=32
+LYRA_F5_CFG_STRENGTH=1.2
+LYRA_F5_SWAY=-1
+LYRA_F5_CKPT=data/models/f5_ptbr/model_last.safetensors
+LYRA_F5_VOCAB=data/models/f5_ptbr/vocab.txt
+```
+
+## Configuração do VTube Studio, opcional
+
+A integração visual atual ainda pode usar VTube Studio.
+
+No VTube Studio:
+
+1. ative a API de plugins
+2. permita o plugin `Lyra`
+3. crie/mapeie o parâmetro customizado `LyraMouthOpen`
+4. mapeie `LyraMouthOpen` para o parâmetro de boca do modelo
+5. configure hotkeys compatíveis com:
+   - `My Animation 1` para idle
+   - `thinking_1` para thinking
+   - `My Animation 2` para speaking
+
+Se o VTube Studio não estiver aberto, Lyra apenas reproduz o áudio normalmente.
+
+## Rodando
+
+```powershell
+python main.py
+```
+
+Exemplo:
+
+```text
+Lyra pronta. Digite sua mensagem. Use 'sair' para encerrar.
+
+Você: quem é você?
+Lyra: Sou Lyra. Falo com você agora.
+```
+
+## Arquivos locais ignorados
+
+O `.gitignore` evita subir:
+
+- `.venv/`
+- `tools/`
+- modelos pesados
+- áudios gerados
+- token local do VTube Studio
+- referências de voz privadas
+- base local de conhecimento
+
+## Roadmap curto
+
+- [x] CLI local
+- [x] persona JSON
+- [x] resposta com Ollama
+- [x] F5-TTS
+- [x] fila de voz
+- [x] lipsync com VTube Studio opcional
+- [ ] avatar próprio em PySide6/PyQt
+- [ ] sprites de boca: closed, half, open
+- [ ] blink automático
+- [ ] cache de respostas rápidas
+- [ ] captura de microfone
+- [ ] captura de áudio do sistema
+- [ ] decider para interação autônoma
+
+## Aviso
+
+Lyra é um projeto experimental local. A proposta é prototipar uma presença virtual com voz, memória e comportamento social controlado.

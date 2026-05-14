@@ -1,10 +1,10 @@
 {
-  "current_mood": "smug",
-  "energy": 0.85,
-  "warmth": 0.35,
-  "sarcasm": 0.75,
+  "current_mood": "playful",
+  "energy": 0.75,
+  "warmth": 0.55,
+  "sarcasm": 0.45,
   "playfulness": 0.8,
-  "patience": 0.35,
-  "arrogance": 0.7,
+  "patience": 0.6,
+  "confidence": 0.75,
   "seriousness_when_needed": 0.85
 }
