@@ -2,6 +2,11 @@
   "local_only": true,
   "allow_screen_capture_only_on_request": true,
   "allow_audio_only_with_push_to_talk": true,
-  "technical_depth": "light",
-  "auto_execute_actions": false
+  "technical_depth": "medium",
+  "auto_execute_actions": false,
+  "streamer_mode": true,
+  "allow_playful_sarcasm": true,
+  "allow_theatrical_arrogance": true,
+  "avoid_real_insults": true,
+  "tts_friendly_output": true
 }

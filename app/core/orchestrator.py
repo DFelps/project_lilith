@@ -16,7 +16,7 @@ from app.memory.retrieval import Retrieval
 from app.ui.cli import CLI
 from app.ui.vtube_state import set_vtube_state
 from app.utils.logger import log
-from app.voice.tts import generate_audio, warmup_tts
+from app.voice.tts import configure_tts, generate_audio, warmup_tts
 from app.voice.vtube_lipsync import play_with_lipsync
 
 
@@ -36,6 +36,7 @@ class LilithOrchestrator:
         self.cli = CLI()
 
         self.voice_enabled = config.get("voice", {}).get("tts", {}).get("enabled", False)
+        configure_tts(config.get("voice", {}))
 
         self.voice_text_queue: Queue[str | None] = Queue()
         self.voice_audio_queue: Queue[tuple[str, object] | None] = Queue()
@@ -251,7 +252,7 @@ class LilithOrchestrator:
                 payload = self.response_builder.build(safe_answer)
 
                 self.memory.remember_exchange(user_text, payload["text"])
-                self._enqueue_voice(payload["text"][:160])
+                self._enqueue_voice(payload["text"])
 
                 if not self.voice_enabled:
                     self._set_state_safe("idle")
@@ -261,7 +262,7 @@ class LilithOrchestrator:
                 log(f"Falha no streaming do LLM: {exc}")
                 payload = self.process_text(user_text)
                 self.cli.show_response(payload["text"])
-                self._enqueue_voice(payload["text"][:160])
+                self._enqueue_voice(payload["text"])
 
                 if not self.voice_enabled:
                     self._set_state_safe("idle")
