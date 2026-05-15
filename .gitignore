@@ -46,8 +46,6 @@ data/memory/sessions/
 data/vision/ocr_cache/
 data/vision/screenshots/
 
-# VTube Studio local auth
-data/vtube_token.txt
 
 # Private voice references and local models
 data/voice/reference/*.wav

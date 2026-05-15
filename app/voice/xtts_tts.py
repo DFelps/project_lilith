@@ -2,7 +2,6 @@ from pathlib import Path
 import re
 import time
 import uuid
-import asyncio
 
 import numpy as np
 import sounddevice as sd
@@ -15,13 +14,13 @@ from TTS.api import TTS
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = BASE_DIR / "data" / "audio" / "generated"
-REFERENCE_WAV = BASE_DIR / "data" / "voice" / "reference" / "lilith_reference.wav"
+REFERENCE_WAV = BASE_DIR / "data" / "voice" / "reference" / "lyra_reference.wav"
 
 SAMPLE_RATE = 24000
 MAX_TEXT_CHARS = 160
 MAX_CHUNK_CHARS = 45
 CHUNK_PAUSE_SECONDS = 0.04
-WARMUP_TEXT = "Lilith pronta"
+WARMUP_TEXT = "Lyra pronta"
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -224,13 +223,11 @@ def play_audio(wav: object, sample_rate: int = SAMPLE_RATE) -> None:
 
 
 def speak(text: str) -> str | None:
-    from app.voice.vtube_lipsync import play_with_lipsync
-
     generated = generate_audio(text)
     if not generated:
         return None
 
     output_path, wav = generated
-    asyncio.run(play_with_lipsync(wav, SAMPLE_RATE))
+    play_audio(wav, SAMPLE_RATE)
 
     return output_path

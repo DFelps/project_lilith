@@ -1,8 +1,6 @@
 from queue import Queue
 from threading import Thread, Event, Lock
 import time
-import asyncio
-
 from app.brain.memory_manager import MemoryManager
 from app.brain.persona_loader import PersonaLoader
 from app.brain.style_guard import StyleGuard
@@ -14,10 +12,10 @@ from app.core.session_manager import SessionManager
 from app.llm.general_reasoner import GeneralReasoner
 from app.memory.retrieval import Retrieval
 from app.ui.cli import CLI
-from app.ui.vtube_state import set_vtube_state
+from app.ui.avatar_state import set_avatar_state
 from app.utils.logger import log
 from app.voice.tts import configure_tts, generate_audio, warmup_tts
-from app.voice.vtube_lipsync import play_with_lipsync
+from app.voice.tts import play_audio
 
 
 class LyraOrchestrator:
@@ -75,7 +73,7 @@ class LyraOrchestrator:
 
     def _set_state_safe(self, state: str) -> None:
         try:
-            set_vtube_state(state)
+            set_avatar_state(state)
         except Exception as exc:
             log(f"Falha ao ativar estado '{state}': {exc}")
 
@@ -110,7 +108,7 @@ class LyraOrchestrator:
 
             try:
                 _, wav = item
-                asyncio.run(play_with_lipsync(wav, 24000))
+                play_audio(wav, 24000)
             except Exception as exc:
                 log(f"Falha ao reproduzir áudio com lipsync: {exc}")
             finally:

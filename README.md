@@ -1,6 +1,6 @@
 # Lyra
 
-Lyra é uma IA local com personalidade, memória, voz por F5-TTS e integração visual opcional com avatar/VTuber.
+Lyra é uma IA local com personalidade, memória, voz por F5-TTS e base preparada para um companion animado na área de trabalho.
 
 O projeto começou como uma assistente local e agora está sendo reestruturado como uma presença social para desktop/call:
 
@@ -23,12 +23,12 @@ MVP atual:
 - geração de resposta via Ollama
 - TTS com F5-TTS
 - normalização de texto para voz
-- controle de avatar via VTube Studio API, quando disponível
-- fallback de áudio normal quando o VTube Studio não está aberto
+- estado local do avatar para futura janela própria na área de trabalho
+- reprodução de áudio direta, sem depender de app externo
 
 Próximas fases:
 
-- avatar próprio direto na área de trabalho, sem depender do VTube Studio
+- avatar próprio direto na área de trabalho
 - mouth sprites `closed`, `half`, `open`
 - estado visual `thinking` direto no overlay
 - captura de microfone e áudio do sistema
@@ -53,9 +53,9 @@ Próximas fases:
 
 ### Visual atual
 
-- VTube Studio opcional
-- Live2D opcional
-- WebSocket API do VTube Studio
+- base para avatar próprio na área de trabalho
+- estado visual em `data/avatar/state.json`
+- sem dependência de app externo no MVP
 
 ### Estrutura interna
 
@@ -148,22 +148,17 @@ LYRA_F5_CKPT=data/models/f5_ptbr/model_last.safetensors
 LYRA_F5_VOCAB=data/models/f5_ptbr/vocab.txt
 ```
 
-## Configuração do VTube Studio, opcional
+## Avatar desktop
 
-A integração visual atual ainda pode usar VTube Studio.
+A integração antiga foi removida. A Lyra agora grava o estado visual em `data/avatar/state.json`, que pode ser consumido por uma futura janela própria em Electron/PixiJS.
 
-No VTube Studio:
+Estados atuais:
 
-1. ative a API de plugins
-2. permita o plugin `Lyra`
-3. crie/mapeie o parâmetro customizado `LyraMouthOpen`
-4. mapeie `LyraMouthOpen` para o parâmetro de boca do modelo
-5. configure hotkeys compatíveis com:
-   - `My Animation 1` para idle
-   - `thinking_1` para thinking
-   - `My Animation 2` para speaking
-
-Se o VTube Studio não estiver aberto, Lyra apenas reproduz o áudio normalmente.
+```text
+idle
+thinking
+speaking
+```
 
 ## Rodando
 
@@ -188,7 +183,6 @@ O `.gitignore` evita subir:
 - `tools/`
 - modelos pesados
 - áudios gerados
-- token local do VTube Studio
 - referências de voz privadas
 - base local de conhecimento
 
@@ -199,7 +193,7 @@ O `.gitignore` evita subir:
 - [x] resposta com Ollama
 - [x] F5-TTS
 - [x] fila de voz
-- [x] lipsync com VTube Studio opcional
+- [x] voz com F5-TTS sem dependência de app externo
 - [ ] avatar próprio em PySide6/PyQt
 - [ ] sprites de boca: closed, half, open
 - [ ] blink automático
