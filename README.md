@@ -1,73 +1,184 @@
 # Lyra
 
-Lyra é uma IA local com personalidade, memória, voz por F5-TTS e base preparada para um companion animado na área de trabalho.
+![Lyra — Local AI Companion](docs/images/lyra-header.png)
 
-O projeto começou como uma assistente local e agora está sendo reestruturado como uma presença social para desktop/call:
+**Lyra** is a local AI companion focused on voice, memory, personality, and desktop presence.
 
-- conversa por CLI
-- respostas com LLM local via Ollama
-- voz local com F5-TTS
-- fila assíncrona de geração/reprodução de áudio
-- lipsync por áudio gerado
-- estados visuais como `idle`, `thinking` e `speaking`
-- memória simples e controle de estilo
+Originally started as a terminal-based local assistant, Lyra is now evolving into a desktop companion designed to combine local intelligence, voice interaction, persistent memory, and visual presence.
 
-## Status
+The goal is to explore what a truly local AI companion can become when voice, personality, and desktop interaction are treated as first-class parts of the experience.
 
-Projeto experimental em desenvolvimento ativo.
+---
 
-MVP atual:
+## Vision
 
-- chat por terminal
-- persona carregada de JSON
-- geração de resposta via Ollama
-- TTS com F5-TTS
-- normalização de texto para voz
-- estado local do avatar para futura janela própria na área de trabalho
-- reprodução de áudio direta, sem depender de app externo
+Lyra is not meant to be just another chatbot wrapper.
 
-Próximas fases:
+The project aims to create a local AI companion that can:
 
-- avatar próprio direto na área de trabalho
-- mouth sprites `closed`, `half`, `open`
-- estado visual `thinking` direto no overlay
-- captura de microfone e áudio do sistema
-- decisão contextual de quando interagir sozinha
-- respostas rápidas em cache para wake word e reações curtas
+* think through a local LLM
+* speak through local voice synthesis
+* maintain contextual memory
+* react visually to interaction states
+* display an animated desktop avatar
+* synchronize lipsync with generated speech
+* evolve toward more contextual and reactive interactions
 
-## Stack
+Everything is designed with a **local-first** mindset:
 
-### IA
+* no cloud dependency
+* no external avatar applications
+* transparent architecture
+* customizable behavior
+* modular internal systems
 
-- Python
-- Ollama
-- modelo local, por padrão `llama3.1:8b`
+---
 
-### Voz
+## Current Status
 
-- F5-TTS
-- sounddevice
-- soundfile
-- numpy
-- torch
+Lyra is currently under active experimental development.
 
-### Visual atual
+The MVP already includes:
 
-- base para avatar próprio na área de trabalho
-- estado visual em `data/avatar/state.json`
-- sem dependência de app externo no MVP
+* terminal conversation interface
+* local response generation with Ollama
+* JSON-driven personality system
+* local memory foundation
+* F5-TTS voice synthesis
+* asynchronous audio generation/playback queue
+* speech text normalization
+* avatar state output
+* generated-audio lipsync foundation
+* interaction states such as:
 
-### Estrutura interna
+```text
+idle
+thinking
+speaking
+```
 
-- core orchestrator
-- persona e estilo
-- memória local
-- roteamento básico
-- safety local simples
-- fila de TTS
-- lipsync baseado no volume do áudio gerado
+The current architecture is intentionally simple, but built to evolve.
 
-## Estrutura
+---
+
+![Lyra System Overview](docs/images/lyra-system-overview.png)
+
+## Core Systems
+
+### Local Intelligence
+
+Lyra runs entirely on local language models through Ollama.
+
+Current default model:
+
+```text
+llama3.1:8b
+```
+
+The LLM layer is isolated from the rest of the architecture, allowing future experimentation with:
+
+* different local models
+* model routing
+* hybrid reasoning strategies
+* contextual decision layers
+
+---
+
+### Voice
+
+Voice is a central part of Lyra's identity.
+
+Current voice stack:
+
+* F5-TTS
+* sounddevice
+* soundfile
+* numpy
+* torch
+
+Voice pipeline currently supports:
+
+* local speech generation
+* reference voice conditioning
+* transcript-based voice control
+* async generation queue
+* direct local playback
+* generated audio analysis for lipsync
+
+Voice is treated as a core interaction layer rather than an optional output.
+
+---
+
+### Memory & Personality
+
+Lyra includes lightweight local memory and behavioral control.
+
+Current internal logic includes:
+
+* persona configuration
+* style control
+* local memory
+* routing logic
+* response orchestration
+* simple local safety behavior
+
+This keeps interactions consistent while allowing the project to remain understandable and hackable.
+
+---
+
+### Avatar System
+
+The previous VTube Studio integration was removed.
+
+Lyra is now being rebuilt around its own desktop avatar system.
+
+Current avatar foundation:
+
+* local state output
+* visual state tracking
+* lipsync-ready architecture
+* sprite-based expression system
+
+Current sprite structure:
+
+```text
+base.png
+eye_open.png
+eye_closed.png
+eye_serious.png
+eye_happy.png
+mouth_closed.png
+mouth_middle_open.png
+mouth_open.png
+mouth_surprise.png
+mouth_smile.png
+```
+
+The desktop overlay is the next major milestone.
+
+---
+
+## Desktop Companion Direction
+
+Lyra is transitioning from a terminal assistant into a visual desktop companion.
+
+Planned overlay behavior includes:
+
+* desktop companion overlay
+* transparent overlay window
+* click-through mode
+* idle breathing animation
+* automatic blinking
+* state-driven expression switching
+* mouth movement during speech
+* thinking state animations
+* lightweight runtime without external dependencies
+
+The first implementation focuses on efficient sprite-based animation rather than full Live2D complexity.
+
+---
+
+## Internal Architecture
 
 ```text
 project_lyra/
@@ -80,9 +191,12 @@ project_lyra/
 │   ├── utils/
 │   ├── vision/
 │   └── voice/
+├── assets/
+│   └── lyra/
 ├── config/
 ├── data/
 │   ├── audio/
+│   ├── avatar/
 │   ├── brain/
 │   ├── knowledge/
 │   ├── memory/
@@ -90,118 +204,122 @@ project_lyra/
 │   ├── vision/
 │   └── voice/
 │       └── reference/
+├── desktop/
 ├── scripts/
 ├── tests/
 ├── main.py
 └── requirements.txt
 ```
 
-## Instalação
+---
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-```
+## Technical Highlights
 
-## Ollama
+* Python core architecture
+* Ollama local inference
+* F5-TTS voice synthesis
+* async voice queue
+* generated-audio lipsync
+* JSON persona system
+* modular project layout
+* local-first design
+* desktop companion foundation
 
-Deixe o Ollama rodando localmente:
+---
 
-```text
-http://127.0.0.1:11434
-```
+![Lyra Desktop Companion](docs/images/lyra-desktop-companion.png)
 
-Modelo padrão:
+## Roadmap
 
-```bash
-ollama run llama3.1:8b
-```
+### Completed
 
-## F5-TTS
+* [x] Local CLI chat
+* [x] Persona system
+* [x] Local LLM integration
+* [x] F5-TTS voice generation
+* [x] Async audio queue
+* [x] Direct local audio playback
+* [x] Removal of VTube Studio dependency
+* [x] Avatar state output
+* [x] Lipsync foundation
 
-Arquivos esperados:
+---
 
-```text
-data/voice/reference/lyra_reference.wav
-data/voice/reference/lyra_reference.txt
-```
+### In Progress
 
-Modelo PT-BR local esperado por padrão:
+* [ ] Native desktop avatar overlay
+* [ ] Mouth sprite animation
+* [ ] Automatic blinking
+* [ ] Thinking visual state
+* [ ] State-based expression switching
+* [ ] Faster cached interactions
 
-```text
-data/models/f5_ptbr/model_last.safetensors
-data/models/f5_ptbr/vocab.txt
-```
+---
 
-Esses arquivos são locais e não devem ser versionados se forem pesados ou privados.
+### Planned
 
-Variáveis opcionais:
+* [ ] Microphone input
+* [ ] System audio capture
+* [ ] Wake word support
+* [ ] Context-aware interaction triggers
+* [ ] Screen/context awareness
+* [ ] Better long-term memory
+* [ ] Local automation hooks
+* [ ] Desktop actions
 
-```text
-LYRA_F5_SPEED=0.72
-LYRA_F5_NFE_STEP=32
-LYRA_F5_CFG_STRENGTH=1.2
-LYRA_F5_SWAY=-1
-LYRA_F5_CKPT=data/models/f5_ptbr/model_last.safetensors
-LYRA_F5_VOCAB=data/models/f5_ptbr/vocab.txt
-```
+---
 
-## Avatar desktop
+## Demo
 
-A integração antiga foi removida. A Lyra agora grava o estado visual em `data/avatar/state.json`, que pode ser consumido por uma futura janela própria em Electron/PixiJS.
+YouTube walkthrough coming soon.
 
-Estados atuais:
+Planned demo coverage:
 
-```text
-idle
-thinking
-speaking
-```
+* local conversation loop
+* F5-TTS speech generation
+* avatar expression switching
+* lipsync behavior
+* desktop overlay interaction
 
-## Rodando
+---
 
-```powershell
-python main.py
-```
+## Design Philosophy
 
-Exemplo:
+Lyra is built around a few simple ideas:
 
-```text
-Lyra pronta. Digite sua mensagem. Use 'sair' para encerrar.
+* local-first
+* privacy-focused
+* visually present
+* modular by design
+* easy to inspect
+* easy to extend
+* practical over overengineered
 
-Você: quem é você?
-Lyra: Sou Lyra. Falo com você agora.
-```
+The objective is to build something understandable, personal, and extensible — not a black-box assistant.
 
-## Arquivos locais ignorados
+---
 
-O `.gitignore` evita subir:
+## Current Limitations
 
-- `.venv/`
-- `tools/`
-- modelos pesados
-- áudios gerados
-- referências de voz privadas
-- base local de conhecimento
+As an active experimental project, some systems are intentionally minimal:
 
-## Roadmap curto
+* memory is still lightweight
+* avatar animation is sprite-based
+* lipsync is volume-driven
+* desktop overlay is in development
+* autonomous behavior is not enabled yet
 
-- [x] CLI local
-- [x] persona JSON
-- [x] resposta com Ollama
-- [x] F5-TTS
-- [x] fila de voz
-- [x] voz com F5-TTS sem dependência de app externo
-- [ ] avatar próprio em PySide6/PyQt
-- [ ] sprites de boca: closed, half, open
-- [ ] blink automático
-- [ ] cache de respostas rápidas
-- [ ] captura de microfone
-- [ ] captura de áudio do sistema
-- [ ] decider para interação autônoma
+These are current MVP constraints, not final architectural limitations.
 
-## Aviso
+---
 
-Lyra é um projeto experimental local. A proposta é prototipar uma presença virtual com voz, memória e comportamento social controlado.
+## Project Note
+
+Lyra is a personal local AI companion experiment focused on combining:
+
+* local intelligence
+* voice interaction
+* memory continuity
+* visual desktop presence
+
+The long-term goal is to create a local companion that feels interactive, responsive, and more present during interaction — while remaining fully under user control.
